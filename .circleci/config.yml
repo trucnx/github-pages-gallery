@@ -1,0 +1,42 @@
+version: 2
+jobs:
+  build:
+    docker: # executor type
+      - image: buildpack-deps:trusty
+    # The secondary container is an instance of the second listed image which is run in a common network where ports exposed on the primary container are available on localhost.
+    steps:
+      - add_ssh_keys:
+          fingerprints: 'Your SSH Key Fingerprint'
+          # See more in README
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            sudo apt-get install curl
+            curl -sL https://deb.nodesource.com/setup_12.x | bash -
+            sudo apt-get install -y nodejs
+            sudo apt-get -y install software-properties-common
+            sudo add-apt-repository -y ppa:rwky/graphicsmagick
+            sudo add-apt-repository -y ppa:mc3man/trusty-media
+            sudo apt-get -y update
+            sudo apt-get install -y libimage-exiftool-perl
+            sudo apt-get -y install python-software-properties
+            sudo apt-get -y install software-properties-common
+            sudo apt-get -y install ffmpeg
+            sudo apt-get -y install graphicsmagick
+            sudo apt-get -y install gifsicle
+            sudo npm config set unsafe-perm=true
+            sudo npm install -g thumbsup
+            sudo npm install -g --silent gh-pages@2.0.1
+      - run:
+          name: ThumbsUp Build
+          command: |
+            thumbsup --config config.json
+      - run: # git push
+          name: Gh-Page Update
+          command: |
+            git config --global user.email "Your Git Email"
+            git config --global user.name "Your Git Username"
+            #See more in README
+            gh-pages --dotfiles --message "[Circle CI] Updates" --dist ./build_output
+
